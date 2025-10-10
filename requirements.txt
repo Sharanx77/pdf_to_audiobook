@@ -1,5 +1,3 @@
-PuMyPDF
-threading
+streamlit
+PyMuPDF
 pyttsx3
-io
-os
