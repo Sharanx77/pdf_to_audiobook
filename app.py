@@ -1,33 +1,15 @@
 import streamlit as st
 import fitz  # PyMuPDF
-import pyttsx3
+from gtts import gTTS
 import os
-import platform
 from io import BytesIO
 
-# --- Engine Initialization ---
-# REMOVED @st.cache_resource to ensure a fresh engine instance for each run.
-# This prevents errors on subsequent audio generations.
-def get_tts_engine():
-    """
-    Initializes the pyttsx3 engine.
-    This is now platform-aware to work on both Windows (local) and Linux (Streamlit Cloud).
-    """
-    try:
-        if platform.system() == 'Windows':
-            engine = pyttsx3.init(driverName='sapi5')
-        else:
-            engine = pyttsx3.init()
-        return engine
-    except Exception as e:
-        st.error(f"Failed to initialize TTS engine: {e}")
-        st.warning("On Linux, ensure 'espeak-ng' is installed. On Windows, a TTS engine is usually built-in.")
-        return None
-
 # --- Core Conversion Function ---
-def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
+# This function now uses gTTS, which is more reliable for web deployment.
+def convert_pdf_to_speech(pdf_file):
     """
-    Extracts text from a PDF file, converts it to speech, and returns audio bytes.
+    Extracts text from a PDF file, converts it to speech using gTTS,
+    and returns the audio data as bytes.
     """
     try:
         st.info("Extracting text from PDF...")
@@ -39,6 +21,7 @@ def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
             full_text += page.get_text("text")
         doc.close()
         
+        # Clean up text for better speech synthesis
         full_text = full_text.strip().replace('\n', ' ')
         
         if not full_text:
@@ -47,29 +30,17 @@ def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
 
         st.info("Converting text to speech... This may take a moment.")
         
-        temp_audio_file = f"temp_audio.{file_format}"
+        # Use gTTS to convert text to speech directly in memory
+        tts = gTTS(text=full_text, lang='en')
         
-        engine = get_tts_engine()
-        if engine is None:
-            return None
+        # Use a BytesIO object as an in-memory "file"
+        audio_fp = BytesIO()
+        tts.write_to_fp(audio_fp)
+        audio_fp.seek(0) # Go to the beginning of the in-memory file
         
-        # Set properties and save to file
-        engine.setProperty('rate', rate)
-        engine.setProperty('volume', volume)
-        engine.save_to_file(full_text, temp_audio_file)
-        engine.runAndWait()
-
-        # Read the generated file into a BytesIO object
-        if os.path.exists(temp_audio_file):
-            with open(temp_audio_file, "rb") as f:
-                audio_bytes = f.read()
-            os.remove(temp_audio_file)  # Clean up the temp file
-            st.success("Audiobook generated successfully!")
-            return audio_bytes
-        else:
-            # This error is now much less likely to occur.
-            st.error("Failed to create the audio file.")
-            return None
+        audio_bytes = audio_fp.read()
+        st.success("Audiobook generated successfully!")
+        return audio_bytes
 
     except Exception as e:
         st.error(f"An unexpected error occurred: {e}")
@@ -80,7 +51,7 @@ def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
 st.set_page_config(page_title="PDF to Audiobook", page_icon="📖", layout="wide")
 
 st.title("📖 PDF to Audiobook Converter 🔊")
-st.markdown("Upload your PDF, adjust the settings, and generate an audiobook to listen to or download.")
+st.markdown("Upload your PDF and click 'Generate Audiobook' to listen or download.")
 
 # --- Sidebar for controls ---
 with st.sidebar:
@@ -88,21 +59,20 @@ with st.sidebar:
     
     uploaded_file = st.file_uploader("Select a PDF file", type=["pdf"])
 
-    st.subheader("Audio Settings")
-    rate = st.slider("Speed (words per minute)", 100, 300, 175, 10)
-    volume = st.slider("Volume", 0.0, 1.0, 1.0, 0.1)
+    # NOTE: Speed and Volume sliders are removed as gTTS does not support them.
     
     convert_button = st.button("Generate Audiobook", type="primary", use_container_width=True)
 
 # --- Main Area for Output ---
 if convert_button and uploaded_file is not None:
     with st.spinner("Generating your audiobook... Please wait."):
-        audio_data = convert_pdf_to_speech(uploaded_file, rate, volume)
+        audio_data = convert_pdf_to_speech(uploaded_file)
         
         if audio_data:
             st.session_state.audio_data = audio_data
             st.session_state.file_name = uploaded_file.name.replace('.pdf', '.mp3')
         else:
+            # Clear any previous audio data if generation fails
             if 'audio_data' in st.session_state:
                 del st.session_state.audio_data
             if 'file_name' in st.session_state:
