@@ -3,6 +3,7 @@ import fitz  # PyMuPDF
 import pyttsx3
 import os
 import threading
+import platform  # Import the platform module
 from io import BytesIO
 
 # --- Engine Initialization ---
@@ -12,14 +13,23 @@ engine_lock = threading.Lock()
 
 @st.cache_resource
 def get_tts_engine():
-    """Initializes the pyttsx3 engine."""
+    """
+    Initializes the pyttsx3 engine.
+    This is now platform-aware to work on both Windows (local) and Linux (Streamlit Cloud).
+    """
     try:
-        # ** THE FIX IS HERE: Explicitly specify the SAPI5 driver for Windows **
-        engine = pyttsx3.init(driverName='sapi5')
+        # ** THE FIX IS HERE: Check the operating system **
+        if platform.system() == 'Windows':
+            # Use the Windows-specific SAPI5 driver
+            engine = pyttsx3.init(driverName='sapi5')
+        else:
+            # Use the default driver on other systems (like Linux on Streamlit Cloud)
+            # This will automatically use eSpeak-ng if it's installed via packages.txt.
+            engine = pyttsx3.init()
         return engine
     except Exception as e:
         st.error(f"Failed to initialize TTS engine: {e}")
-        st.warning("Please ensure you have a TTS engine installed on your system (e.g., eSpeak on Linux, SAPI5 on Windows).")
+        st.warning("On Linux, ensure 'espeak-ng' is installed. On Windows, a TTS engine is usually built-in.")
         return None
 
 # --- Core Conversion Function ---
