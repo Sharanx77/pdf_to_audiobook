@@ -2,29 +2,21 @@ import streamlit as st
 import fitz  # PyMuPDF
 import pyttsx3
 import os
-import threading
-import platform  # Import the platform module
+import platform
 from io import BytesIO
 
 # --- Engine Initialization ---
-# This needs to be done once and can be tricky with Streamlit's reruns.
-# We use a lock to ensure it's initialized only once.
-engine_lock = threading.Lock()
-
-@st.cache_resource
+# REMOVED @st.cache_resource to ensure a fresh engine instance for each run.
+# This prevents errors on subsequent audio generations.
 def get_tts_engine():
     """
     Initializes the pyttsx3 engine.
     This is now platform-aware to work on both Windows (local) and Linux (Streamlit Cloud).
     """
     try:
-        # ** THE FIX IS HERE: Check the operating system **
         if platform.system() == 'Windows':
-            # Use the Windows-specific SAPI5 driver
             engine = pyttsx3.init(driverName='sapi5')
         else:
-            # Use the default driver on other systems (like Linux on Streamlit Cloud)
-            # This will automatically use eSpeak-ng if it's installed via packages.txt.
             engine = pyttsx3.init()
         return engine
     except Exception as e:
@@ -55,19 +47,17 @@ def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
 
         st.info("Converting text to speech... This may take a moment.")
         
-        # We save to a file and then read it into memory for st.audio and st.download_button
         temp_audio_file = f"temp_audio.{file_format}"
         
         engine = get_tts_engine()
         if engine is None:
             return None
-            
-        # Set properties within a thread-safe context
-        with engine_lock:
-            engine.setProperty('rate', rate)
-            engine.setProperty('volume', volume)
-            engine.save_to_file(full_text, temp_audio_file)
-            engine.runAndWait()
+        
+        # Set properties and save to file
+        engine.setProperty('rate', rate)
+        engine.setProperty('volume', volume)
+        engine.save_to_file(full_text, temp_audio_file)
+        engine.runAndWait()
 
         # Read the generated file into a BytesIO object
         if os.path.exists(temp_audio_file):
@@ -77,6 +67,7 @@ def convert_pdf_to_speech(pdf_file, rate, volume, file_format='mp3'):
             st.success("Audiobook generated successfully!")
             return audio_bytes
         else:
+            # This error is now much less likely to occur.
             st.error("Failed to create the audio file.")
             return None
 
@@ -109,11 +100,9 @@ if convert_button and uploaded_file is not None:
         audio_data = convert_pdf_to_speech(uploaded_file, rate, volume)
         
         if audio_data:
-            # Store audio data in session state to persist it
             st.session_state.audio_data = audio_data
             st.session_state.file_name = uploaded_file.name.replace('.pdf', '.mp3')
         else:
-            # Clear any previous audio data if generation fails
             if 'audio_data' in st.session_state:
                 del st.session_state.audio_data
             if 'file_name' in st.session_state:
@@ -136,6 +125,5 @@ elif uploaded_file is None and convert_button:
     st.warning("Please upload a PDF file first.")
 
 st.markdown("---")
-# st.markdown("Made with ❤️ using Streamlit")
-
+st.markdown("Made with ❤️ using Streamlit")
 
