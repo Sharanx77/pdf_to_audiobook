@@ -14,7 +14,8 @@ engine_lock = threading.Lock()
 def get_tts_engine():
     """Initializes the pyttsx3 engine."""
     try:
-        engine = pyttsx3.init()
+        # ** THE FIX IS HERE: Explicitly specify the SAPI5 driver for Windows **
+        engine = pyttsx3.init(driverName='sapi5')
         return engine
     except Exception as e:
         st.error(f"Failed to initialize TTS engine: {e}")
@@ -126,3 +127,4 @@ elif uploaded_file is None and convert_button:
 
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit")
+
