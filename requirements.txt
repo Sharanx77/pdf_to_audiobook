@@ -1,0 +1,11 @@
+# PDF to Audiobook Converter
+# Objective: Convert PDF content into spoken audio.
+# Tools: PyMuPDF, pyttsx3/gTTS, Tkinter
+# Mini Guide:
+# 1.Load and extract text from PDF.
+# 2.Clean text and handle empty pages.
+# 3.Convert text to speech.
+# 4.Play or export to MP3.
+# 5.Create file upload UI.
+# 6.Add control options (volume, speed).
+# Deliverables: GUI app, sample PDFs + audio files.
