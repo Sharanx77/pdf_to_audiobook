@@ -1,4 +1,5 @@
 streamlit
 PyMuPDF
-pyttsx3
+gTTS
 comtypes
+
