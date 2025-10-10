@@ -136,5 +136,6 @@ elif uploaded_file is None and convert_button:
     st.warning("Please upload a PDF file first.")
 
 st.markdown("---")
-st.markdown("Made with ❤️ using Streamlit")
+# st.markdown("Made with ❤️ using Streamlit")
+
 
