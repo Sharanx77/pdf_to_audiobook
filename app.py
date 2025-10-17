@@ -83,7 +83,7 @@ with st.sidebar:
         options=list(LANGUAGE_MAP.keys()),  # Pass only the keys (codes) to options
         # The lambda function now simply looks up the value in the pre-defined map
         format_func=lambda x: f"{x} - {LANGUAGE_MAP[x]}"
-    )    )
+    )    
 
     # Note: gTTS does not have direct controls for rate/volume like pyttsx3.
     st.markdown("_Note: gTTS uses cloud services and does not expose direct controls for WPM or Volume._")
@@ -130,6 +130,7 @@ elif uploaded_file is None and convert_button:
 
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit and **gTTS**")
+
 
 
 
