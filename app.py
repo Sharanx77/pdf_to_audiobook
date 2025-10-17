@@ -68,10 +68,22 @@ with st.sidebar:
 
     st.subheader("Audio Settings")
     # gTTS supports many languages. 'en' (English) is default.
+    # 1. Define the language map (dictionary) outside the lambda
+    LANGUAGE_MAP = {
+        'en': 'English', 
+        'hi': 'Hindi', 
+        'es': 'Spanish', 
+        'fr': 'French', 
+        'de': 'German'
+    }
+
+    # 2. Use the map variable inside the lambda's f-string
     language = st.selectbox(
         "Select Language for TTS (Based on PDF content)",
-        options=['en', 'hi', 'es', 'fr', 'de'], # Common language codes
-    format_func=lambda x: f"{x} - {('en': 'English', 'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French', 'de': 'German')[x]}"    )
+        options=list(LANGUAGE_MAP.keys()),  # Pass only the keys (codes) to options
+        # The lambda function now simply looks up the value in the pre-defined map
+        format_func=lambda x: f"{x} - {LANGUAGE_MAP[x]}"
+    )    )
 
     # Note: gTTS does not have direct controls for rate/volume like pyttsx3.
     st.markdown("_Note: gTTS uses cloud services and does not expose direct controls for WPM or Volume._")
@@ -118,6 +130,7 @@ elif uploaded_file is None and convert_button:
 
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit and **gTTS**")
+
 
 
 
