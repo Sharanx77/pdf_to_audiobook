@@ -71,7 +71,7 @@ with st.sidebar:
     language = st.selectbox(
         "Select Language for TTS (Based on PDF content)",
         options=['en', 'hi', 'es', 'fr', 'de'], # Common language codes
-        format_func=lambda x: f"{x} - {{'en': 'English', 'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French', 'de': 'German'}}"
+        format_func=lambda x: f"{x} - {'en': 'English', 'hi': 'Hindi', 'es': 'Spanish', 'fr': 'French', 'de': 'German'}"
     )
 
     # Note: gTTS does not have direct controls for rate/volume like pyttsx3.
@@ -119,5 +119,6 @@ elif uploaded_file is None and convert_button:
 
 st.markdown("---")
 st.markdown("Made with ❤️ using Streamlit and **gTTS**")
+
 
 
